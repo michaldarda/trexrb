@@ -1,36 +1,36 @@
 require 'spec_helper'
 
 describe "Trexrb functional spec" do
-  let(:backend) { Trexrb::Backend.new }
+  let(:client) { Trexrb.new }
 
   it "returns empty list of keys when is empty" do
     mock_socket
 
-    expect(backend.store.keys).to eq([])
+    expect(client.keys).to eq([])
   end
 
   it "doesn't fail when accessing missing key" do
     mock_socket
 
-    expect(backend.store[:foo]).to eq(nil)
+    expect(client[:foo]).to eq(nil)
   end
 
   it "sets key to value" do
     mock_socket "OK\r\n"
 
-    expect(backend.store["foo"] = "bar").to eq "bar"
+    expect(client["foo"] = "bar").to eq "bar"
   end
 
   it "gets single key" do
     mock_socket "bar\r\n"
 
-    expect(backend.store["foo"]).to eq "bar"
+    expect(client["foo"]).to eq "bar"
   end
 
   it "lists all available keys" do
     mock_socket("foo,goo\r\n")
 
-    expect(backend.store.keys).to eq("foo,goo")
+    expect(client.keys).to eq("foo,goo")
   end
 
   private
