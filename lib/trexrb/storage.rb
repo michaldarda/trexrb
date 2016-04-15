@@ -1,3 +1,5 @@
+require 'socket'
+
 module Trexrb
   class Storage
     DEFAULT_HOST = 'localhost'
