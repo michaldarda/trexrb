@@ -1,3 +1,5 @@
+require 'socket'
+
 module Trexrb
   class Storage
     DEFAULT_HOST = 'localhost'
@@ -9,15 +11,28 @@ module Trexrb
     end
 
     def get(key)
-      with_connection { |conn| conn.print Request.new.get(key) }
+      with_connection do |conn|
+        conn.print Request.new.get(key)
+
+        Response.new(conn.read).body
+      end
     end
 
     def set(key, value)
-      with_connection { |conn| conn.print Request.new.set(key, value) }
+      with_connection do |conn|
+        conn.print Request.new.set(key, value)
+
+        Response.new(conn.read).body
+      end
     end
 
     def keys
-      with_connection { |conn| conn.print Request.new.list }
+      with_connection do |conn|
+        conn.print Request.new.list
+        result = Response.new(conn.read).body
+
+        result || []
+      end
     end
 
     alias_method :[], :get
@@ -34,12 +49,12 @@ module Trexrb
       puts "Connection error: #{ex.inspect}"
     ensure
       socket.close_write
-      return Response.new(socket.read).body
     end
 
     Response = Struct.new(:data) do
       def body
-        return "{}" if no_data?
+        return if no_data?
+
         YAML.load(cleaned_data)
       rescue => ex
         puts ex.inspect
@@ -56,6 +71,7 @@ module Trexrb
         data.rstrip
       end
     end
+    private_constant :Response
 
     Request = Class.new do
       FIELD_SEPARATOR = "\t"
@@ -79,5 +95,6 @@ module Trexrb
         ([command_name] + params).join(FIELD_SEPARATOR) + TERMINATOR
       end
     end
+    private_constant :Request
   end
 end
